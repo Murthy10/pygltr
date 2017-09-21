@@ -36,10 +36,16 @@ class Gltr:
         issues_json = issues_request.json()
         issues = []
         for issue in issues_json:
-            milestone = 'None' if issue['milestone']['title'] is None else issue['milestone']['title']
-            time_estimate = 0 if issue['time_stats']['time_estimate'] is None else issue['time_stats']['time_estimate']
-            total_time_spent = 0 if issue['time_stats']['total_time_spent'] is None else issue['time_stats'][
-                'total_time_spent']
+            try:
+                milestone = issue['milestone']['title']
+            except Exception:
+                milestone = 'None'
+            try:
+                time_estimate = issue['time_stats']['time_estimate']
+                total_time_spent = issue['time_stats']['total_time_spent']
+            except Exception:
+                time_estimate = 0
+                total_time_spent = 0
             issues.append(Issue(id=issue['id'], iid=issue['iid'], title=issue['title'], milestone=milestone,
                                 project_id=project.id, estimate=time_estimate, spent=total_time_spent))
         return issues
