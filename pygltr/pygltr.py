@@ -1,7 +1,6 @@
 import csv
 import requests
 import argparse
-from datetime import timedelta
 
 
 class PyGltr:
@@ -38,27 +37,36 @@ class PyGltr:
             fieldnames = ['id', 'issue', 'milestone', 'estimate', 'spent']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
-            [writer.writerow(row(issue)) for issue in issues]
+            [writer.writerow(issue_to_row(issue)) for issue in issues]
 
     def to_shell(self):
         _, _, issues = self()
-        rows = [row(issue) for issue in issues]
+        rows = [issue_to_row(issue) for issue in issues]
         milestones = {}
-        for r in rows:
-            milestone = r['milestone'].replace(" ", "_")
-            if milestone not in milestones:
-                milestones[milestone] = {}
-                milestones[milestone]['estimate'] = r['estimate']
-                milestones[milestone]['spent'] = r['spent']
+        for row in rows:
+            milestone = row['milestone'].replace(" ", "_")
+            if milestone in milestones:
+                milestones[milestone]['estimate'] += row['estimate']
+                milestones[milestone]['spent'] += row['spent']
             else:
-                milestones[milestone]['estimate'] += r['estimate']
-                milestones[milestone]['spent'] += r['spent']
-        [print('{0}  estimate: {1}  spent: {2}'.format(key, timedelta(seconds=milestones[key]['estimate']),
-                                                       timedelta(seconds=milestones[key]['spent'])))
-         for key in milestones]
+                milestones[milestone] = {}
+                milestones[milestone]['estimate'] = row['estimate']
+                milestones[milestone]['spent'] = row['spent']
+
+        print('{0:40}{1:20}{2:20}'.format('Milestone', 'Estimate', 'Spent'))
+        print('-'*80)
+        for key in milestones:
+            print('{0:50}{1:20}{2:20}'.format(key, pretty_time(seconds=milestones[key]['estimate']),
+                                              pretty_time(seconds=milestones[key]['spent'])))
 
 
-def row(issue):
+def pretty_time(seconds):
+    minutes, _ = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return '{0}h {1}min'.format(hours, minutes)
+
+
+def issue_to_row(issue):
     try:
         milestone = issue['milestone']['title']
     except Exception:
@@ -106,6 +114,7 @@ def main_function():
     group.set_defaults(shell=False, file='issues.csv')
     parser.set_defaults(url='https://gitlab.com/api/v4/')
     args = parser.parse_args()
+
     pygltr = PyGltr(url=args.url, token=args.token, project_name=args.project)
     if args.shell:
         pygltr.to_shell()
