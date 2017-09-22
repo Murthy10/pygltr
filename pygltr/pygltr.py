@@ -2,7 +2,6 @@ import csv
 import requests
 import argparse
 from datetime import timedelta
-from collections import defaultdict
 
 
 class PyGltr:
@@ -44,20 +43,26 @@ class PyGltr:
     def to_shell(self):
         _, _, issues = self()
         rows = [row(issue) for issue in issues]
-        milestones = defaultdict(int)
+        milestones = {}
         for r in rows:
-            milestones[r['milestone']] += milestones['estimate']
-            milestones[r['milestone']] += milestones['spent']
-        [print('{0}  estimate: {1}  spent: {2}'.format('milestone', str(timedelta(seconds=milestone['estimate'])),
-                                                       str(timedelta(seconds=milestone['spent']))))
-         for milestone in milestones]
+            milestone = r['milestone'].replace(" ", "_")
+            if milestone not in milestones:
+                milestones[milestone] = {}
+                milestones[milestone]['estimate'] = r['estimate']
+                milestones[milestone]['spent'] = r['spent']
+            else:
+                milestones[milestone]['estimate'] += r['estimate']
+                milestones[milestone]['spent'] += r['spent']
+        [print('{0}  estimate: {1}  spent: {2}'.format(key, timedelta(seconds=milestones[key]['estimate']),
+                                                       timedelta(seconds=milestones[key]['spent'])))
+         for key in milestones]
 
 
 def row(issue):
     try:
         milestone = issue['milestone']['title']
     except Exception:
-        milestone = ''
+        milestone = '-'
     try:
         time_estimate = issue['time_stats']['time_estimate']
         total_time_spent = issue['time_stats']['total_time_spent']
