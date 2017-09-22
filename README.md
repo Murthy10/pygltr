@@ -3,22 +3,6 @@ Python script to get GitLab Time Reports, it uses the GitLab API
 
 ## Usage
 If you use pygltr from the command line it will get you a CSV file with a list of all issues and some basic information or an overview of the time spent per milestone.
-```bash
-usage: pygltr.py [-h] -t TOKEN -p PROJECT [-u URL] [-f FILE | -s]
-
-Get time tracking data from GitLab
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -t TOKEN, --token TOKEN
-                        Private GitLab token
-  -p PROJECT, --project PROJECT
-                        Project name
-  -u URL, --url URL     URL of the GitLab API
-  -f FILE, --file FILE  CSV output filename
-  -s, --shell           Overview of the time spent per milestone
-```
-
 Beside of the usage as a script pygltr provides the class PyGltr which is ready to use from your own code.
 
 ### Script example
