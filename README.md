@@ -19,7 +19,7 @@ optional arguments:
 
 ```
 
-Beside of the usage is as a script pygltr provides the class PyGltr which is ready to use from your own code.
+Beside of the usage as a script pygltr provides the class PyGltr which is ready to use from your own code.
 
 ### Script example
 
