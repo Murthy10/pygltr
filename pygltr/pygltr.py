@@ -54,9 +54,9 @@ class PyGltr:
                 milestones[milestone]['spent'] = row['spent']
 
         print('{0:40}{1:20}{2:20}'.format('Milestone', 'Estimate', 'Spent'))
-        print('-'*80)
+        print('-' * 80)
         for key in milestones:
-            print('{0:50}{1:20}{2:20}'.format(key, pretty_time(seconds=milestones[key]['estimate']),
+            print('{0:40}{1:20}{2:20}'.format(key, pretty_time(seconds=milestones[key]['estimate']),
                                               pretty_time(seconds=milestones[key]['spent'])))
 
 
@@ -110,7 +110,7 @@ def main_function():
         '--shell',
         dest='shell',
         action='store_true',
-        help='Over')
+        help='Overview of the time spent per milestone')
     group.set_defaults(shell=False, file='issues.csv')
     parser.set_defaults(url='https://gitlab.com/api/v4/')
     args = parser.parse_args()
