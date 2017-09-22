@@ -40,7 +40,7 @@ or
 
 ```bash
 python pygltr.py -t TOKEN -p PROJECT -s
-
+    
 Milestone                               Estimate            Spent               
 --------------------------------------------------------------------------------
 -                                       0h 0min             0h 0min             
