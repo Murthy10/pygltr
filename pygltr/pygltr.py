@@ -1,6 +1,8 @@
 import csv
 import requests
 import argparse
+from datetime import timedelta
+from collections import defaultdict
 
 
 class PyGltr:
@@ -31,14 +33,24 @@ class PyGltr:
         return issues_request.json()
 
     def to_csv(self, file_name):
-        user, project, issues = self()
+        _, _, issues = self()
 
         with open(file_name, 'w') as csv_file:
             fieldnames = ['id', 'issue', 'milestone', 'estimate', 'spent']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
-            for issue in issues:
-                writer.writerow(row(issue))
+            [writer.writerow(row(issue)) for issue in issues]
+
+    def to_shell(self):
+        _, _, issues = self()
+        rows = [row(issue) for issue in issues]
+        milestones = defaultdict(int)
+        for r in rows:
+            milestones[r['milestone']] += milestones['estimate']
+            milestones[r['milestone']] += milestones['spent']
+        [print('{0}  estimate: {1}  spent: {2}'.format('milestone', str(timedelta(seconds=milestone['estimate'])),
+                                                       str(timedelta(seconds=milestone['spent']))))
+         for milestone in milestones]
 
 
 def row(issue):
@@ -50,7 +62,7 @@ def row(issue):
         time_estimate = issue['time_stats']['time_estimate']
         total_time_spent = issue['time_stats']['total_time_spent']
     except Exception:
-        time_estimate, total_time_spent = 0
+        time_estimate, total_time_spent = 0, 0
     return {'id': issue['iid'], 'issue': issue['title'], 'milestone': milestone, 'estimate': time_estimate,
             'spent': total_time_spent}
 
@@ -74,17 +86,26 @@ def main_function():
         '--url',
         dest='url',
         help='URL of the GitLab API')
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         '-f',
         '--file',
         dest='file',
         help='CSV output filename')
-
-    parser.set_defaults(url='https://gitlab.com/api/v4/', file='issues.csv')
+    group.add_argument(
+        '-s',
+        '--shell',
+        dest='shell',
+        action='store_true',
+        help='Over')
+    group.set_defaults(shell=False, file='issues.csv')
+    parser.set_defaults(url='https://gitlab.com/api/v4/')
     args = parser.parse_args()
-
     pygltr = PyGltr(url=args.url, token=args.token, project_name=args.project)
-    pygltr.to_csv(file_name=args.file)
+    if args.shell:
+        pygltr.to_shell()
+    else:
+        pygltr.to_csv(file_name=args.file)
 
 
 if __name__ == "__main__":
