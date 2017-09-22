@@ -47,8 +47,17 @@ Milestone                               Estimate            Spent
 Physical_model                          16h 0min            0h 0min             
 Project_setup                           27h 30min           20h 0min   
 ```
+  
+  
 
 ### Code example
+For an easy usage there is a package available on PyPi.  
+To install pygltr, simply:
+```bash
+pip install pygltr
+```
+
+Now it's ready to use.
 ```python
 from pygltr.pygltr import PyGltr
 
