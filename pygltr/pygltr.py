@@ -5,9 +5,7 @@ import argparse
 
 class PyGltr:
     def __init__(self, url, token, project_name):
-        self.headers = {'PRIVATE-TOKEN': token}
-        self.url = url
-        self.project_name = project_name
+        self.headers, self.url, self.project_name = {'PRIVATE-TOKEN': token}, url, project_name
 
     def __call__(self, *args, **kwargs):
         user = self.get_user()
@@ -32,7 +30,6 @@ class PyGltr:
 
     def to_csv(self, file_name):
         _, _, issues = self()
-
         with open(file_name, 'w') as csv_file:
             fieldnames = ['id', 'issue', 'milestone', 'estimate', 'spent']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
@@ -42,22 +39,26 @@ class PyGltr:
     def to_shell(self):
         _, _, issues = self()
         rows = [issue_to_row(issue) for issue in issues]
-        milestones = {}
-        for row in rows:
-            milestone = row['milestone'].replace(" ", "_")
-            if milestone in milestones:
-                milestones[milestone]['estimate'] += row['estimate']
-                milestones[milestone]['spent'] += row['spent']
-            else:
-                milestones[milestone] = {}
-                milestones[milestone]['estimate'] = row['estimate']
-                milestones[milestone]['spent'] = row['spent']
-
+        milestones = sum_milestones(rows=rows)
         print('{0:40}{1:20}{2:20}'.format('Milestone', 'Estimate', 'Spent'))
         print('-' * 80)
         for key in milestones:
             print('{0:40}{1:20}{2:20}'.format(key, pretty_time(seconds=milestones[key]['estimate']),
                                               pretty_time(seconds=milestones[key]['spent'])))
+
+
+def sum_milestones(rows):
+    milestones = {}
+    for row in rows:
+        milestone = row['milestone'].replace(" ", "_")
+        if milestone in milestones:
+            milestones[milestone]['estimate'] += row['estimate']
+            milestones[milestone]['spent'] += row['spent']
+        else:
+            milestones[milestone] = {}
+            milestones[milestone]['estimate'] = row['estimate']
+            milestones[milestone]['spent'] = row['spent']
+    return milestones
 
 
 def pretty_time(seconds):
@@ -82,35 +83,13 @@ def issue_to_row(issue):
 
 def main_function():
     parser = argparse.ArgumentParser(description='Get time tracking data from GitLab', )
-    parser.add_argument(
-        '-t',
-        '--token',
-        dest='token',
-        help='Private GitLab token',
-        required=True)
-    parser.add_argument(
-        '-p',
-        '--project',
-        dest='project',
-        help='Project name',
-        required=True)
-    parser.add_argument(
-        '-u',
-        '--url',
-        dest='url',
-        help='URL of the GitLab API')
+    parser.add_argument('-t', '--token', dest='token', help='Private GitLab token', required=True)
+    parser.add_argument('-p', '--project', dest='project', help='Project name', required=True)
+    parser.add_argument('-u', '--url', dest='url', help='URL of the GitLab API')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        '-f',
-        '--file',
-        dest='file',
-        help='CSV output filename')
-    group.add_argument(
-        '-s',
-        '--shell',
-        dest='shell',
-        action='store_true',
-        help='Overview of the time spent per milestone')
+    group.add_argument('-f', '--file', dest='file', help='CSV output filename')
+    group.add_argument('-s', '--shell', dest='shell', action='store_true',
+                       help='Overview of the time spent per milestone')
     group.set_defaults(shell=False, file='issues.csv')
     parser.set_defaults(url='https://gitlab.com/api/v4/')
     args = parser.parse_args()
